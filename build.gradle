@@ -4,9 +4,17 @@ buildscript {
     maven {
       url "https://plugins.gradle.org/m2/"
     }
+    maven {
+        url "${artifactoryContext}/third-party"
+        credentials {
+            username = artifactoryUserName
+            password = artifactoryPassword
+        }
+    }
   }
   dependencies {
-    classpath "com.gradle.publish:plugin-publish-plugin:0.9.1"
+      classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:2.2.5'
+      classpath "com.gradle.publish:plugin-publish-plugin:0.9.1"
   }
 }
 
@@ -16,6 +24,29 @@ apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: "com.gradle.plugin-publish"
 apply plugin: 'license'
+apply plugin: 'maven-publish'
+apply plugin: 'artifactory'
+
+artifactory {
+    publish {
+        contextUrl = artifactoryContext
+        repository {
+            repoKey = 'gradle-snapshot'
+            username = artifactoryUserName
+            password = artifactoryPassword
+            ivy {
+                ivyLayout =      '[organisation]/[module]/[revision]/ivy-[revision].xml'
+                artifactLayout = '[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]'
+
+                mavenCompatible = false
+            }
+        }
+        defaults {
+            publishPom = false
+            publishIvy = true
+        }
+    }
+}
 
 buildscript {
     repositories {
@@ -28,7 +59,7 @@ buildscript {
 }
 
 group = 'nl.javadude.gradle.plugins'
-version = "0.13.2-SNAPSHOT"
+version = "0.13.3-INFONIC"
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -130,6 +161,14 @@ def pomConfig = {
         contributor {
             name 'Justin Ryan'
             email 'jryan@netflix.com'
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
